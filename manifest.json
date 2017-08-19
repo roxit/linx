@@ -1,0 +1,32 @@
+{
+  "description": "Linx",
+  "manifest_version": 2,
+  "name": "Linx",
+  "version": "0.1",
+  "homepage_url": "https://github.com/roxit/linx",
+  "icons": {
+    "48": "icons/48.png"
+  },
+  "browser_action": {
+    "default_icon": "icons/48.jpg",
+    "default_title": "Linx"
+  },
+  "permissions": [
+    "tabs"
+  ],
+  "commands": {
+    "copy-link": {
+      "suggested_key": {
+        "default": "Alt+1"
+      }
+    },
+    "copy-text": {
+      "suggested_key": {
+        "default": "Alt+2"
+      }
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  }
+}
