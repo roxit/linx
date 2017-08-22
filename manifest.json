@@ -9,11 +9,13 @@
   },
   "browser_action": {
     "default_icon": "icons/48.jpg",
-    "default_title": "Linx"
+    "default_title": "Linx",
+    "default_popup": "popup/linx.html",
+    "browser_style": true
   },
-  "permissions": [
-    "tabs"
-  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
   "commands": {
     "copy-link": {
       "suggested_key": {
@@ -26,7 +28,8 @@
       }
     }
   },
-  "background": {
-    "scripts": ["background.js"]
-  }
+  "permissions": [
+    "clipboardWrite",
+    "tabs"
+  ]
 }
