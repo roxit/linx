@@ -7,6 +7,15 @@ function getCurrentTab(cb) {
     }
   });
 }
+// https://gist.github.com/Rob--W/ec23b9d6db9e56b7e4563f1544e0d546
+function escapeHTML(str) {
+    // Note: string cast using String; may throw if `str` is non-serializable, e.g. a Symbol.
+    // Most often this is not the case though.
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;")
+        .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 function transTab(tab) {
   var url = new URL(tab.url);
@@ -19,8 +28,15 @@ function transTab(tab) {
 
 function processLink(tab) {
   var res = transTab(tab);
-  document.querySelector("#url").value = res[0];
-  document.querySelector("#text").value = res[1];
+  var url = res[0];
+  var safeUrl = escapeHTML(url);
+  var text = res[1];
+  var safeText = escapeHTML(text);
+  link = `<a href="${safeUrl}">${safeText}</a>`;
+  document.querySelector("#url").value = url;
+  document.querySelector("#text").value = text;
+  var el = document.querySelector('#link');
+  el.innerHTML = link;
 }
 
 function setLink() {
