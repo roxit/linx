@@ -8,36 +8,26 @@ function getCurrentTab(cb) {
   });
 }
 
-function transURL(url) {
+function transTab(tab) {
+  var url = new URL(tab.url);
+  var text = tab.title;
   if (url.hostname == 'weibo.com') {
-    return url.protocol + '//' + url.hostname + url.pathname;
+    return [url.protocol + '//' + url.hostname + url.pathname, text];
   }
-  return url.href;
+  return [url.href, text];
 }
 
-function processURL(tab) {
-  var res = transURL(new URL(tab.url));
-  var el = document.querySelector("#url");
-  el.value = res;
-}
-
-function transText(text) {
-  return text;
-}
-
-function processText(tab) {
-  var res = transText(tab.title);
-  var el = document.querySelector("#text");
-  el.value = res;
+function processLink(tab) {
+  var res = transTab(tab);
+  document.querySelector("#url").value = res[0];
+  document.querySelector("#text").value = res[1];
 }
 
 function setLink() {
-  getCurrentTab(processURL);
+  getCurrentTab(processLink);
 }
 
-function setText() {
-  getCurrentTab(processText);
-}
+setLink();
 
 function copy(query) {
   var el = document.querySelector(query);
@@ -55,6 +45,3 @@ function copyText() {
 
 document.querySelector("#url").addEventListener("click", copyURL);
 document.querySelector("#text").addEventListener("click", copyText);
-
-setLink();
-setText();
