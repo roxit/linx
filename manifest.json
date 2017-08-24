@@ -17,14 +17,9 @@
     "scripts": ["background.js"]
   },
   "commands": {
-    "copy-link": {
+    "_execute_browser_action": {
       "suggested_key": {
-        "default": "Alt+1"
-      }
-    },
-    "copy-text": {
-      "suggested_key": {
-        "default": "Alt+2"
+        "default": "Ctrl+Q"
       }
     }
   },
