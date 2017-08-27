@@ -34,11 +34,10 @@ function processLink(tab) {
   document.querySelector("#url").value = url;
   document.querySelector("#text").value = text;
   var safeUrl = escapeHTML(url);
-  var safeText = escapeHTML(text);
-  link = `<a href="${safeUrl}">${safeText}</a>`;
+  link = `<a href="${safeUrl}">${text}</a>`;
   var el = document.querySelector('#link');
   el.href = safeUrl;
-  el.text = safeText;
+  el.text = text;
 }
 
 function setLink() {
