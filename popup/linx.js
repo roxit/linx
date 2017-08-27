@@ -24,6 +24,11 @@ function transTab(tab) {
   if (url.hostname == 'weibo.com') {
     return [url.protocol + '//' + url.hostname + url.pathname, text];
   }
+  if (url.hostname == 'zh.wikipedia.org') {
+    text1 = text.replace('，自由的百科全书', '');
+    text2 = text1.replace(' - 维基百科', '');
+    return [url.href, text1, text2];
+  }
   return [url.href, text];
 }
 
@@ -34,10 +39,16 @@ function processLink(tab) {
   document.querySelector("#url").value = url;
   document.querySelector("#text").value = text;
   var safeUrl = escapeHTML(url);
-  link = `<a href="${safeUrl}">${text}</a>`;
-  var el = document.querySelector('#link');
-  el.href = safeUrl;
-  el.text = text;
+  for (var i = 1; i < res.length; i++) {
+    var a = document.createElement('a');
+    a.href = safeUrl;
+    a.text = res[i];
+    a.classList.add('linx-link');
+    a.contentEditable = true;
+    a.addEventListener('click', copyLink);
+    var el = document.querySelector('#links');
+    el.appendChild(a);
+  }
 }
 
 function setLink() {
@@ -60,8 +71,8 @@ function copyText() {
   copy("#text");
 }
 
-function copyLink() {
-  var el = document.querySelector("#link");
+function copyLink(ev) {
+  var el = ev.target;
   // https://stackoverflow.com/questions/6139107/programmatically-select-text-in-a-contenteditable-html-element
   var range = document.createRange();
   range.selectNodeContents(el);
@@ -73,4 +84,3 @@ function copyLink() {
 
 document.querySelector("#url").addEventListener("click", copyURL);
 document.querySelector("#text").addEventListener("click", copyText);
-document.querySelector("#link").addEventListener("click", copyLink);
