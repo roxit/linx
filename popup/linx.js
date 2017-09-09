@@ -21,6 +21,11 @@ function escapeHTML(str) {
 function transTab(tab) {
   var url = new URL(tab.url);
   var text0 = tab.title;
+  if (url.hostname.split('.').slice(-2)[0] == 'blogspot') {
+    splits = url.hostname.split('.')
+    splits[splits.length-1] = 'com'
+    return [url.protocol + '//' + splits.join('.') + url.pathname, text0];
+  }
   if (url.hostname == 'weibo.com') {
     return [url.protocol + '//' + url.hostname + url.pathname, text0];
   }
