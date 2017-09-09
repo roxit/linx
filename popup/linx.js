@@ -22,13 +22,18 @@ function transTab(tab) {
   var url = new URL(tab.url);
   var text0 = tab.title;
   if (url.hostname.split('.').slice(-2)[0] == 'blogspot') {
-    splits = url.hostname.split('.')
-    splits[splits.length-1] = 'com'
-    return [url.protocol + '//' + splits.join('.') + url.pathname, text0];
+    hostname = url.hostname.replace(/\.blogspot\.[^.]+$/, '.blogspot.com')
+    href = url.protocol + '//' + hostname + url.pathname;
+    text1 = text0 + ' | ' + hostname;
+    return [href, text0, text1];
   }
-  if (url.hostname.endsWith('brendangregg.com')) {
-    text0 = text0 + ' | brendangregg.com';
+  if (url.hostname == 'www.reddit.com') {
+    i = text0.lastIndexOf(' ');
+    text0 = text0.slice(0, i) + ' r/' + text0.slice(i+1);
     return [url.href, text0];
+  }
+  if (url.hostname == 'weibo.com' && url.pathname == '/ttarticle/p/show') {
+    return [url.href, text0 + ' | weibo'];
   }
   if (url.hostname == 'weibo.com') {
     return [url.protocol + '//' + url.hostname + url.pathname, text0];
@@ -55,6 +60,32 @@ function transTab(tab) {
     text1 = text0.replace(' - 维基导游', '');
     return [url.href, text0, text1];
   }
+
+  if (url.hostname.endsWith('brendangregg.com')) {
+    text0 = text0 + ' | brendangregg.com';
+    return [url.href, text0];
+  }
+  if (url.hostname == 'blog.cloudflare.com') {
+    text0 = text0 + ' | cloudflare.com';
+    return [url.href, text0];
+  }
+  if (url.hostname == 'coolshell.cn') {
+    text0 = text0.replace(' | | 酷 壳 - CoolShell', ' - CoolShell');
+    return [url.href, text0];
+  }
+  if (url.hostname == 'www.infoq.com') {
+    text0 = text0 + ' | infoq.com';
+    return [url.href, text0];
+  }
+  if (url.hostname == 'blog.kubernetes.io') {
+    text0 = text0.replace(/^Kubernetes: /, '') + ' | kubernetes.io';
+    return [url.href, text0];
+  }
+  if (url.hostname == 'blog.scottlowe.org') {
+    text0 = text0.replace(' - The weblog of an IT pro specializing in cloud computing, virtualization, and networking, all with an open source view', '');
+    return [url.href, text0];
+  }
+
   return [url.href, text0, text1];
 }
 
