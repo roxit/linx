@@ -20,16 +20,20 @@ function escapeHTML(str) {
 
 function transTab(tab) {
   var url = new URL(tab.url);
-  var text = tab.title;
+  var text0 = tab.title;
   if (url.hostname == 'weibo.com') {
-    return [url.protocol + '//' + url.hostname + url.pathname, text];
+    return [url.protocol + '//' + url.hostname + url.pathname, text0];
+  }
+  if (url.hostname == 'en.wikipedia.org') {
+    text1 = text0.replace(' - Wikipedia', '');
+    return [url.href, text0, text1];
   }
   if (url.hostname == 'zh.wikipedia.org') {
-    text1 = text.replace('，自由的百科全书', '');
-    text2 = text1.replace(' - 维基百科', '');
-    return [url.href, text1, text2];
+    text0 = text0.replace('，自由的百科全书', '');
+    text1 = text0.replace(' - 维基百科', '');
+    return [url.href, text0, text1];
   }
-  return [url.href, text];
+  return [url.href, text0];
 }
 
 function processLink(tab) {
