@@ -26,8 +26,15 @@ function transTab(tab) {
     splits[splits.length-1] = 'com'
     return [url.protocol + '//' + splits.join('.') + url.pathname, text0];
   }
+  if (url.hostname.endsWith('brendangregg.com')) {
+    text0 = text0 + ' | brendangregg.com';
+    return [url.href, text0];
+  }
   if (url.hostname == 'weibo.com') {
     return [url.protocol + '//' + url.hostname + url.pathname, text0];
+  }
+  if (url.hostname == 'mp.weixin.qq.com') {
+    return [url.href, text0 + ' | weixin'];
   }
   if (url.hostname == 'en.wikipedia.org') {
     text1 = text0.replace(' - Wikipedia', '');
@@ -38,7 +45,17 @@ function transTab(tab) {
     text1 = text0.replace(' - 维基百科', '');
     return [url.href, text0, text1];
   }
-  return [url.href, text0];
+  if (url.hostname == 'en.wikivoyage.org') {
+    text0 = text0.replace('Travel guide at ', '');
+    text1 = text0.replace(' – Wikivoyage', '');
+    return [url.href, text0, text1];
+  }
+  if (url.hostname == 'zh.wikivoyage.org') {
+    text0 = text0.replace('来自维基导游的旅行指南', '维基导游');
+    text1 = text0.replace(' - 维基导游', '');
+    return [url.href, text0, text1];
+  }
+  return [url.href, text0, text1];
 }
 
 function processLink(tab) {
