@@ -63,7 +63,7 @@ function transTab(tab) {
       var k = keys[i];
       p.append(k, params.get(k));
     }
-    var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
+    var href = url.protocol + '//' + url.hostname + url.pathname + '?' + unescape(p.toString());
     return [href, text0 + ' | weixin'];
   }
   if (url.hostname == 'en.wikipedia.org') {
