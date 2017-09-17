@@ -13,7 +13,6 @@ function escapeHTML(str) {
     // Note: string cast using String; may throw if `str` is non-serializable, e.g. a Symbol.
     // Most often this is not the case though.
     return String(str)
-        .replace(/&/g, "&amp;")
         .replace(/"/g, "&quot;").replace(/'/g, "&#39;")
         .replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -56,14 +55,19 @@ function transTab(tab) {
     return [url.protocol + '//' + url.hostname + url.pathname, text0];
   }
   if (url.hostname == 'mp.weixin.qq.com') {
+    // https://mp.weixin.qq.com/s/-vHLeu3ML7gX8ADeXzDpwA
+    // https://mp.weixin.qq.com/s?__biz=MzI3NjczODk1MQ==&mid=2247483671&idx=1&sn=910d3ea82cc26de41b3a68bb62175db6&chksm=eb71a7ffdc062ee9a2f961e3187f58c3320da18dd363f414acbb80f722ed12993a0e5f54f6a6&scene=21#wechat_redirect
     var params = url.searchParams;
-    var p = new URLSearchParams();
-    var keys = ['__biz', 'mid', 'idx', 'sn'];
-    for (var i = 0; i < keys.length; i++) {
-      var k = keys[i];
-      p.append(k, params.get(k));
+    var href = url.href;
+    if (params.has('idx')) {
+      var p = new URLSearchParams();
+      var keys = ['__biz', 'mid', 'idx', 'sn'];
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        p.append(k, params.get(k));
+      }
+      var href = url.protocol + '//' + url.hostname + url.pathname + '?' + unescape(p.toString());
     }
-    var href = url.protocol + '//' + url.hostname + url.pathname + '?' + unescape(p.toString());
     return [href, text0 + ' | weixin'];
   }
   if (url.hostname == 'en.wikipedia.org') {
