@@ -46,13 +46,25 @@ function transTab(tab) {
     return [url.href, text0];
   }
   if (url.hostname == 'weibo.com' && url.pathname == '/ttarticle/p/show') {
-    return [url.href, text0 + ' | weibo'];
+    var params = url.searchParams;
+    var p = new URLSearchParams();
+    p.append('id', params.get('id'));
+    var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
+    return [href, text0 + ' | weibo'];
   }
   if (url.hostname == 'weibo.com') {
     return [url.protocol + '//' + url.hostname + url.pathname, text0];
   }
   if (url.hostname == 'mp.weixin.qq.com') {
-    return [url.href, text0 + ' | weixin'];
+    var params = url.searchParams;
+    var p = new URLSearchParams();
+    var keys = ['__biz', 'mid', 'idx', 'sn'];
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      p.append(k, params.get(k));
+    }
+    var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
+    return [href, text0 + ' | weixin'];
   }
   if (url.hostname == 'en.wikipedia.org') {
     text1 = text0.replace(' - Wikipedia', '');
