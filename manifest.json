@@ -23,7 +23,9 @@
       }
     }
   },
+
   "permissions": [
+    "activeTab",
     "clipboardWrite",
     "tabs"
   ]

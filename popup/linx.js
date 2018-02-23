@@ -1,11 +1,9 @@
-function getCurrentTab(cb) {
-  browser.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
-    var currentTab;
-    if (tabs[0]) {
-      currentTab = tabs[0];
-      cb(currentTab);
-    }
-  });
+function getCurrentTab() {
+  return new Promise((resolv, reject) => {
+    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+      resolv(tabs[0]);
+    });
+  })
 }
 
 function escapeHTML(str) {
@@ -29,32 +27,87 @@ function getSuffix(url) {
   return ' | ' + transHostname(url.hostname);
 }
 
-function transTab(tab) {
-  var url = new URL(tab.url);
-  var text0 = tab.title;
-  var text1;
-  if (url.hostname.split('.').slice(-2)[0] == 'blogspot') {
-    hostname = url.hostname.replace(/\.blogspot\.[^.]+$/, '.blogspot.com')
-    href = url.protocol + '//' + hostname + url.pathname;
-    text1 = text0 + ' | ' + hostname;
-    return [href, text0, text1];
-  }
-  if (url.hostname == 'www.reddit.com') {
-    i = text0.lastIndexOf(' ');
-    text0 = text0.slice(0, i) + ' r/' + text0.slice(i+1);
-    return [url.href, text0];
-  }
-  if (url.hostname == 'weibo.com' && url.pathname == '/ttarticle/p/show') {
-    var params = url.searchParams;
-    var p = new URLSearchParams();
-    p.append('id', params.get('id'));
-    var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
-    return [href, text0 + ' | weibo'];
-  }
-  if (url.hostname == 'weibo.com') {
-    return [url.protocol + '//' + url.hostname + url.pathname, text0];
-  }
-  if (url.hostname == 'mp.weixin.qq.com') {
+function ruleDefault(tab, url, title) {
+  return new Promise((resolv, reject) => {
+    // https://www.mozilla.org/en-US/firefox/
+    var suffix = getSuffix(url);
+    var t = title + suffix;
+    resolv([url.href, title, t]);
+  });
+}
+
+function ruleReplace(tab, url, title, pattern, replacement, appendSuffix = false) {
+  return new Promise((resolv, reject) => {
+    var newTitle = title.replace(pattern, replacement);
+    if (appendSuffix) {
+      newTitle = newTitle + getSuffix(url);
+    }
+    resolv([url.href, newTitle])
+  });
+}
+
+function ruleBlogspot(tab, url, title) {
+  // https://meanderful.blogspot.com.br/2017/05/oh-my-more-lions-radios-and-cables.html
+  return new Promise((resolv, reject) => {
+    var hostname = url.hostname.replace(/\.blogspot(\.[^.]+)+$/, '.blogspot.com')
+    console.log(hostname);
+    var href = url.protocol + '//' + hostname + url.pathname;
+    var t = title + ' | ' + hostname;
+    resolv([href, title, t]);
+  });
+}
+
+function ruleWiki(tab, url, title) {
+  return new Promise((resolv, reject) => {
+    var t;
+    if (url.hostname == 'en.wikipedia.org') {
+      // https://en.wikipedia.org/wiki/Wiki
+      t = title.replace(' - Wikipedia', '');
+    }
+    if (url.hostname == 'zh.wikipedia.org') {
+      // https://zh.wikipedia.org/wiki/%E7%BB%B4%E5%9F%BA%E7%99%BE%E7%A7%91
+      title = title.replace('，自由的百科全书', '');
+      t = title.replace(' - 维基百科', '');
+    }
+    if (url.hostname == 'en.wikivoyage.org') {
+      // https://en.wikivoyage.org/wiki/Shanghai
+      title = title.replace('Travel guide at ', '');
+      t = title.replace(' – Wikivoyage', '');
+    }
+    if (url.hostname == 'zh.wikivoyage.org') {
+      // https://zh.wikivoyage.org/wiki/%E4%B8%8A%E6%B5%B7
+      title = title.replace('来自维基导游的旅行指南', '维基导游');
+      t = title.replace(' - 维基导游', '');
+    }
+    resolv([url.href, title, t]);
+  });
+}
+
+function ruleWeibo(tab, url, title) {
+  return new Promise((resolv, reject) => {
+    if (url.pathname == '/ttarticle/p/show') {
+      // https://weibo.com/ttarticle/p/show?id=2309404200442107174498
+      var params = url.searchParams;
+      var p = new URLSearchParams();
+      p.append('id', params.get('id'));
+      var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
+      resolv([href, title + ' | weibo']);
+    }
+    // https://weibo.com/1852299857/G1gDN5btF?ref=collection&rid=5_0_0_3071696340287161361
+    // https://weibo.com/2020604851/G34Ca8qLB?ref=collection&rid=5_0_0_2606722991865294583&type=comment
+    browser.tabs.executeScript({
+      file: "/content_scripts/weibo.js"
+    }).then((result) => {
+      items = [url.protocol + '//' + url.hostname + url.pathname];
+      extraItems = result[0];
+      items.push(...extraItems);
+      resolv(items);
+    })
+  });
+}
+
+function ruleWeixin(tab, url, title) {
+  return new Promise((resolv, reject) => {
     // https://mp.weixin.qq.com/s/-vHLeu3ML7gX8ADeXzDpwA
     // https://mp.weixin.qq.com/s?__biz=MzI3NjczODk1MQ==&mid=2247483671&idx=1&sn=910d3ea82cc26de41b3a68bb62175db6&chksm=eb71a7ffdc062ee9a2f961e3187f58c3320da18dd363f414acbb80f722ed12993a0e5f54f6a6&scene=21#wechat_redirect
     var params = url.searchParams;
@@ -68,61 +121,67 @@ function transTab(tab) {
       }
       var href = url.protocol + '//' + url.hostname + url.pathname + '?' + unescape(p.toString());
     }
-    return [href, text0 + ' | weixin'];
+    resolv([href, title + ' | weixin']);
+  });
+}
+
+function route(tab) {
+  var url = new URL(tab.url);
+  var title = tab.title;
+  var domain = url.hostname.split('.').slice(-2)[0];
+  if (url.hostname == 'weibo.com') {
+    return ruleWeibo(tab, url, title);
   }
-  if (url.hostname == 'en.wikipedia.org') {
-    text1 = text0.replace(' - Wikipedia', '');
-    return [url.href, text0, text1];
+  if (url.hostname == 'mp.weixin.qq.com') {
+    return ruleWeixin(tab, url, title);
   }
-  if (url.hostname == 'zh.wikipedia.org') {
-    text0 = text0.replace('，自由的百科全书', '');
-    text1 = text0.replace(' - 维基百科', '');
-    return [url.href, text0, text1];
+
+  if (domain == 'blogspot' || url.hostname.split('.')[1] == 'blogspot') {
+    return ruleBlogspot(tab, url, title);
   }
-  if (url.hostname == 'en.wikivoyage.org') {
-    text0 = text0.replace('Travel guide at ', '');
-    text1 = text0.replace(' – Wikivoyage', '');
-    return [url.href, text0, text1];
+  if (url.hostname == 'www.reddit.com') {
+    // https://www.reddit.com/r/travel/comments/546y7h/on_a_relatively_clear_day_shanghai_is_astounding/
+    var i = title.lastIndexOf(' ');
+    t = title.slice(0, i) + ' r/' + title.slice(i+1);
+    return ruleReplace(tab, url, title, /.*/, t);
   }
-  if (url.hostname == 'zh.wikivoyage.org') {
-    text0 = text0.replace('来自维基导游的旅行指南', '维基导游');
-    text1 = text0.replace(' - 维基导游', '');
-    return [url.href, text0, text1];
+  if (domain == 'wikipedia' || domain == 'wikivoyage') {
+    return ruleWiki(tab, url, title);
   }
 
   if (url.hostname == 'coolshell.cn') {
-    text0 = text0.replace(' | | 酷 壳 - CoolShell', ' - CoolShell');
-    return [url.href, text0];
+    // https://coolshell.cn/articles/9104.html
+    return ruleReplace(tab, url, title, ' | | 酷 壳 - CoolShell', ' | CoolShell');
   }
   if (url.hostname == 'www.infoq.com') {
-    text0 = text0 + getSuffix(url);
-    return [url.href, text0];
+    // https://www.infoq.com/articles/The-OpenJDK9-Revised-Java-Memory-Model
+    return ruleReplace(tab, url, title, '', '', true);
   }
   if (url.hostname == 'blog.kubernetes.io') {
-    text0 = text0.replace(/^Kubernetes: /, '') + getSuffix(url);
-    return [url.href, text0];
+    // http://blog.kubernetes.io/2017/02/inside-jd-com-shift-to-kubernetes-from-openstack.html
+    return ruleReplace(tab, url, title, /^Kubernetes: /, '', true);
   }
   if (url.hostname == 'blog.scottlowe.org') {
-    text0 = text0.replace(' - The weblog of an IT pro specializing in cloud computing, virtualization, and networking, all with an open source view', '');
-    return [url.href, text0];
+    // blog.scottlowe.org/2012/10/19/link-aggregation-and-lacp-with-open-vswitch/
+    return ruleReplace(tab, url, title, ' - The weblog of an IT pro specializing in cloud computing, virtualization, and networking, all with an open source view', '');
   }
-
-  var suffix = getSuffix(url);
-  text1 = text0 + suffix;
-  return [url.href, text0, text1];
+  return ruleDefault(tab, url, title);
 }
 
-function processLink(tab) {
-  var res = transTab(tab);
-  var url = res[0];
-  var text = res[1];
+function updateView(items) {
+  if (items == null || items.length == 0) {
+    console.log("Skipping updateView")
+    return;
+  }
+  var url = items[0];
+  var text = items[1];
   document.querySelector("#url").value = url;
   document.querySelector("#text").value = text;
   var safeUrl = escapeHTML(url);
-  for (var i = 1; i < res.length; i++) {
+  for (var i = 1; i < items.length; i++) {
     var a = document.createElement('a');
     a.href = safeUrl;
-    a.text = res[i];
+    a.text = items[i];
     a.classList.add('linx-link');
     a.contentEditable = true;
     a.addEventListener('click', copyLink);
@@ -131,11 +190,19 @@ function processLink(tab) {
   }
 }
 
-function setLink() {
-  getCurrentTab(processLink);
+function linx() {
+  getCurrentTab().then(
+    (tab) => {
+      return route(tab);
+    }
+  ).then(
+    (items) => {
+      updateView(items);
+    }
+  );
 }
 
-setLink();
+linx();
 
 function copy(query) {
   var el = document.querySelector(query);
