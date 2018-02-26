@@ -144,9 +144,11 @@ function ruleWeibo(tab, url, title) {
     browser.tabs.executeScript({
       file: "/content_scripts/weibo.js"
     }).then((result) => {
-      items = [url.protocol + '//' + url.hostname + url.pathname];
-      extraItems = result[0];
-      items.push(...extraItems);
+      href = url.protocol + '//' + url.hostname + url.pathname
+      items = [href, title];
+      contentItems = result[0];
+      item = snippetWeibo(href, contentItems[0])
+      items.push(item);
       resolv(items);
     })
   });
@@ -222,10 +224,16 @@ function updateView(items) {
   var url = items[0];
   var text = items[1];
   var safeUrl = escapeHTML(url);
+  var item;
+  items.push();
   var els = document.querySelector('#links');
   for (var i = 1; i < items.length; i++) {
-    var u = snippetURL(safeUrl, items[i]);
-    els.appendChild(u);
+    if (typeof (items[i]) != 'object') {
+      item = snippetURL(safeUrl, items[i]);
+    } else {
+      item = items[i];
+    }
+    els.appendChild(item);
   }
   els.appendChild(snippetText(url));
   els.appendChild(snippetText(text));
