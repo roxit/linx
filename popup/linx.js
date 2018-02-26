@@ -153,13 +153,14 @@ function ruleWeibo(tab, url, title) {
       href = url.protocol + '//' + url.hostname + url.pathname;
       content = result[0];
       var items = [], item;
-      item = IndentedItem(href, content.text)
-      items.push(item);
+      var text_ = content.user + ': ' + content.text;
+      items.push(IndentedItem(href, text_));
+      items.push(IndentedItem(href, content.text));
       if (content.oText != null) {
-        items.push(IndentedItem(href, content.text, content.oText));
+        var oText_ = content.oUser + ': ' + content.oText;
+        items.push(IndentedItem(href, text_, oText_));
+        items.push(IndentedItem(content.oURL, oText_));
       }
-      items.push(LinkItem(href));
-      items.push(TextItem(content.text))
       resolv(items);
     })
   });
