@@ -126,7 +126,7 @@ function IndentedItem(url, ...paragraphs) {
   d.appendChild(a);
   for (var i = 0; i < paragraphs.length; i++) {
     p = document.createElement('p');
-    p.classList.add('linx-paragraph');
+    p.style.marginLeft = '0.375in';
     var s = document.createElement('span');
     s.innerText = paragraphs[i];
     p.appendChild(s);
@@ -152,9 +152,12 @@ function ruleWeibo(tab, url, title) {
     }).then((result) => {
       href = url.protocol + '//' + url.hostname + url.pathname;
       content = result[0];
-      var items = [];
+      var items = [], item;
       item = IndentedItem(href, content.text)
       items.push(item);
+      if (content.oText != null) {
+        items.push(IndentedItem(href, content.text, content.oText));
+      }
       items.push(LinkItem(href));
       items.push(TextItem(content.text))
       resolv(items);
