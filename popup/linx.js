@@ -153,8 +153,8 @@ function ruleWeibo(tab, url, title) {
       file: "/content_scripts/weibo.js"
     }).then((result) => {
       href = url.protocol + '//' + url.hostname + url.pathname;
-      content = result[0];
-      var items = [], item;
+      var content = result[0];
+      var items = [];
       var text_ = content.user + ': ' + content.text;
       items.push(IndentedItem(href, text_));
       items.push(IndentedItem(href, content.text));
@@ -164,7 +164,7 @@ function ruleWeibo(tab, url, title) {
         items.push(IndentedItem(content.oURL, oText_));
       }
       resolv(items);
-    })
+    });
   });
 }
 
@@ -181,9 +181,19 @@ function ruleWeixin(tab, url, title) {
         var k = keys[i];
         p.append(k, params.get(k));
       }
-      var href = url.protocol + '//' + url.hostname + url.pathname + '?' + unescape(p.toString());
+      href = url.protocol + '//' + url.hostname + url.pathname + '?' + unescape(p.toString());
     }
-    resolv([href, title + ' | weixin']);
+    browser.tabs.executeScript({
+      file: "/content_scripts/weixin.js"
+    }).then((result) => {
+      var content = result[0];
+      var items = [];
+      items.push(LinkItem(href, title + '| ' + content.site));
+      items.push(LinkItem(href, title + '| ' + content.user));
+      items.push(LinkItem(href, title + ' | weixin'));
+      items.push(LinkItem(href));
+      resolv(items);
+    });
   });
 }
 
