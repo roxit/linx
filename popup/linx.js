@@ -32,7 +32,7 @@ function ruleDefault(tab, url, title) {
     // https://www.mozilla.org/en-US/firefox/
     var suffix = getSuffix(url);
     var t = title + suffix;
-    resolv([url.href, title, t]);
+    resolv([LinkItem(url.href, title), LinkItem(url.href, t), LinkItem(url.href), TextItem(title)]);
   });
 }
 
@@ -42,7 +42,7 @@ function ruleReplace(tab, url, title, pattern, replacement, appendSuffix = false
     if (appendSuffix) {
       newTitle = newTitle + getSuffix(url);
     }
-    resolv([url.href, newTitle])
+    resolv([LinkItem(url.href, newTitle), LinkItem(url.href), TextItem(newTitle)]);
   });
 }
 
@@ -53,7 +53,7 @@ function ruleBlogspot(tab, url, title) {
     console.log(hostname);
     var href = url.protocol + '//' + hostname + url.pathname;
     var t = title + ' | ' + hostname;
-    resolv([href, title, t]);
+    resolv([LinkItem(href, title), LinkItem(href, t), LinkItem(href)]);
   });
 }
 
@@ -79,37 +79,41 @@ function ruleWiki(tab, url, title) {
       title = title.replace('来自维基导游的旅行指南', '维基导游');
       t = title.replace(' - 维基导游', '');
     }
-    resolv([url.href, title, t]);
+    resolv([LinkItem(url.href, title), LinkItem(url.href, t), LinkItem(url.href), TextItem(t)]);
   });
 }
 
-function snippetContainer(el) {
+function itemWrapper(el) {
   var d = document.createElement('div');
   d.classList.add('linx-item-container');
   d.append(el);
   return d;
 }
 
-function snippetURL(href, text) {
+function LinkItem(href, text = null) {
   var a = document.createElement('a');
   a.href = href;
-  a.text = text;
+  if (text == null) {
+    a.text = href;
+  } else {
+    a.text = text;
+  }
   a.classList.add('linx-item');
   a.contentEditable = true;
   a.addEventListener('click', copyItem);
-  return snippetContainer(a);
+  return itemWrapper(a);
 }
 
-function snippetText(text) {
+function TextItem(text) {
   var p = document.createElement('p');
   p.innerText = text;
   p.contentEditable = true;
   p.addEventListener('click', copyItem);
   p.classList.add('linx-item');
-  return snippetContainer(p);
+  return itemWrapper(p);
 }
 
-function snippetWeibo(url, text) {
+function IndentedItem(url, ...paragraphs) {
   var d = document.createElement('div');
   d.classList.add('linx-item');
   d.contentEditable = true;
@@ -119,14 +123,16 @@ function snippetWeibo(url, text) {
   a.href = url;
   a.text = url;
   p.appendChild(a);
-  d.appendChild(p);
-  p = document.createElement('p');
-  p.style.marginLeft = '0.375in';
-  var s = document.createElement('span');
-  s.innerText = text;
-  p.appendChild(s);
-  d.appendChild(p);
-  return snippetContainer(d);
+  d.appendChild(a);
+  for (var i = 0; i < paragraphs.length; i++) {
+    p = document.createElement('p');
+    p.classList.add('linx-paragraph');
+    var s = document.createElement('span');
+    s.innerText = paragraphs[i];
+    p.appendChild(s);
+    d.appendChild(p);
+  }
+  return itemWrapper(d);
 }
 
 function ruleWeibo(tab, url, title) {
@@ -137,18 +143,20 @@ function ruleWeibo(tab, url, title) {
       var p = new URLSearchParams();
       p.append('id', params.get('id'));
       var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
-      resolv([href, title + ' | weibo']);
+      resolv([LinkItem(href, title + ' | weibo'), LinkItem(href)]);
     }
     // https://weibo.com/1852299857/G1gDN5btF?ref=collection&rid=5_0_0_3071696340287161361
     // https://weibo.com/2020604851/G34Ca8qLB?ref=collection&rid=5_0_0_2606722991865294583&type=comment
     browser.tabs.executeScript({
       file: "/content_scripts/weibo.js"
     }).then((result) => {
-      href = url.protocol + '//' + url.hostname + url.pathname
-      items = [href, title];
-      contentItems = result[0];
-      item = snippetWeibo(href, contentItems[0])
+      href = url.protocol + '//' + url.hostname + url.pathname;
+      content = result[0];
+      var items = [];
+      item = IndentedItem(href, content.text)
       items.push(item);
+      items.push(LinkItem(href));
+      items.push(TextItem(content.text))
       resolv(items);
     })
   });
@@ -217,26 +225,10 @@ function route(tab) {
 }
 
 function updateView(items) {
-  if (items == null || items.length == 0) {
-    console.log("Skipping updateView")
-    return;
-  }
-  var url = items[0];
-  var text = items[1];
-  var safeUrl = escapeHTML(url);
-  var item;
-  items.push();
   var els = document.querySelector('#links');
-  for (var i = 1; i < items.length; i++) {
-    if (typeof (items[i]) != 'object') {
-      item = snippetURL(safeUrl, items[i]);
-    } else {
-      item = items[i];
-    }
-    els.appendChild(item);
+  for (var i = 0; i < items.length; i++) {
+    els.appendChild(items[i]);
   }
-  els.appendChild(snippetText(url));
-  els.appendChild(snippetText(text));
 }
 
 function linx() {

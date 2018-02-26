@@ -1,10 +1,14 @@
 function weibo() {
-  wbText = document.querySelector(".WB_detail > .WB_text");
-  origText = document.querySelector(".WB_expand > .WB_text");
-  if (origText) {
-    return [wbText.innerText, origText.innerText];
-  } else {
-    return [wbText.innerText];
+  var text, oText;
+  var textEl = document.querySelector(".WB_detail > .WB_text");
+  var oTextEl = document.querySelector(".WB_expand > .WB_text");
+  text = textEl.innerText;
+  if (oTextEl) {
+    oText = oTextEl.innerText;
+  }
+  return {
+    text: text,
+    oText: oText
   }
 }
 

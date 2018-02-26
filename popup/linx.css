@@ -14,3 +14,8 @@
 .linx-item p {
   margin: 0in;
 }
+
+.linx-item .linx-paragraph {
+  margin: 0in;
+  margin-left: 0.375in;
+}
