@@ -145,8 +145,10 @@ function ruleWeibo(tab, url, title) {
       var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
       resolv([LinkItem(href, title + ' | weibo'), LinkItem(href)]);
     }
-    // https://weibo.com/1852299857/G1gDN5btF?ref=collection&rid=5_0_0_3071696340287161361
-    // https://weibo.com/2020604851/G34Ca8qLB?ref=collection&rid=5_0_0_2606722991865294583&type=comment
+    // simple: https://weibo.com/1852299857/G1gDN5btF?ref=collection&rid=5_0_0_3071696340287161361
+    // repost: https://weibo.com/2020604851/G4K3JE5L5?from=page_1005052020604851_profile&wvr=6&mod=weibotime&type=comment
+    // repost, long: https://weibo.com/2020604851/G34Ca8qLB?ref=collection&rid=5_0_0_2606722991865294583&type=comment
+    // repost, deleted: https://weibo.com/2020604851/G4SD92ZF7?from=page_1005052020604851_profile&wvr=6&mod=weibotime&type=comment
     browser.tabs.executeScript({
       file: "/content_scripts/weibo.js"
     }).then((result) => {
