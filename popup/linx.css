@@ -1,13 +1,16 @@
-.linx-link {
-  display: block;
+.linx-item-container {
+  margin-top: 2pt;
+  margin-right: 0in;
 }
 
-.linx-url {
+.linx-item {
   display: block;
   width: 100%;
+  margin: 0in;
+  border-bottom-style: dotted;
+  border-width: 1pt;
 }
 
-.linx-text {
-  display: block;
-  width: 100%;
+.linx-item p {
+  margin: 0in;
 }

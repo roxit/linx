@@ -83,6 +83,52 @@ function ruleWiki(tab, url, title) {
   });
 }
 
+function snippetContainer(el) {
+  var d = document.createElement('div');
+  d.classList.add('linx-item-container');
+  d.append(el);
+  return d;
+}
+
+function snippetURL(href, text) {
+  var a = document.createElement('a');
+  a.href = href;
+  a.text = text;
+  a.classList.add('linx-item');
+  a.contentEditable = true;
+  a.addEventListener('click', copyItem);
+  return snippetContainer(a);
+}
+
+function snippetText(text) {
+  var p = document.createElement('p');
+  p.innerText = text;
+  p.contentEditable = true;
+  p.addEventListener('click', copyItem);
+  p.classList.add('linx-item');
+  return snippetContainer(p);
+}
+
+function snippetWeibo(url, text) {
+  var d = document.createElement('div');
+  d.classList.add('linx-item');
+  d.contentEditable = true;
+  d.addEventListener('click', copyItem);
+  var p = document.createElement('p');
+  var a = document.createElement('a');
+  a.href = url;
+  a.text = url;
+  p.appendChild(a);
+  d.appendChild(p);
+  p = document.createElement('p');
+  p.style.marginLeft = '0.375in';
+  var s = document.createElement('span');
+  s.innerText = text;
+  p.appendChild(s);
+  d.appendChild(p);
+  return snippetContainer(d);
+}
+
 function ruleWeibo(tab, url, title) {
   return new Promise((resolv, reject) => {
     if (url.pathname == '/ttarticle/p/show') {
@@ -175,19 +221,14 @@ function updateView(items) {
   }
   var url = items[0];
   var text = items[1];
-  document.querySelector("#url").value = url;
-  document.querySelector("#text").value = text;
   var safeUrl = escapeHTML(url);
+  var els = document.querySelector('#links');
   for (var i = 1; i < items.length; i++) {
-    var a = document.createElement('a');
-    a.href = safeUrl;
-    a.text = items[i];
-    a.classList.add('linx-link');
-    a.contentEditable = true;
-    a.addEventListener('click', copyLink);
-    var el = document.querySelector('#links');
-    el.appendChild(a);
+    var u = snippetURL(safeUrl, items[i]);
+    els.appendChild(u);
   }
+  els.appendChild(snippetText(url));
+  els.appendChild(snippetText(text));
 }
 
 function linx() {
@@ -204,21 +245,7 @@ function linx() {
 
 linx();
 
-function copy(query) {
-  var el = document.querySelector(query);
-  el.select();
-  document.execCommand("copy");
-}
-
-function copyURL() {
-  copy("#url");
-}
-
-function copyText() {
-  copy("#text");
-}
-
-function copyLink(ev) {
+function copyItem(ev) {
   var el = ev.target;
   // https://stackoverflow.com/questions/6139107/programmatically-select-text-in-a-contenteditable-html-element
   var range = document.createRange();
@@ -228,6 +255,3 @@ function copyLink(ev) {
   sel.addRange(range);
   document.execCommand('copy');
 }
-
-document.querySelector("#url").addEventListener("click", copyURL);
-document.querySelector("#text").addEventListener("click", copyText);
