@@ -1,13 +1,22 @@
 function weixin() {
-    var user, site;
-    var el = document.querySelector('#meta_content > em.rich_media_meta_text:last-of-type');
-    user = '@' + el.innerText;
-    el = document.querySelector('#meta_content > a#post-user');
-    site = '@' + el.innerText;
-    return {
-      user: user,
-      site: site
-    }
+  let text = '', user = '', site = '';
+  let el = document.querySelector('#activity-name')
+  if (el) {
+    text = el.innerText;
   }
+  el = document.querySelector('#meta_content #js_author_name');
+  if (el) {
+    user = '@' + el.innerText;
+  }
+  el = document.querySelector('#meta_content #js_name');
+  if (el) {
+    site = '@' + el.innerText;
+  }
+  return {
+    text: text,
+    user: user,
+    site: site
+  }
+}
 
-  weixin();
+weixin();

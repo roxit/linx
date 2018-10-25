@@ -170,9 +170,10 @@ function ruleWeibo(tab, url, title) {
 
 function ruleWeixin(tab, url, title) {
   return new Promise((resolv, reject) => {
-    // https://mp.weixin.qq.com/s/-vHLeu3ML7gX8ADeXzDpwA
+    // user+site, https://mp.weixin.qq.com/s/DXQueOaIDuBOJKu9Qof-IA
+    // site, https://mp.weixin.qq.com/s/-vHLeu3ML7gX8ADeXzDpwA
     // https://mp.weixin.qq.com/s?__biz=MzI3NjczODk1MQ==&mid=2247483671&idx=1&sn=910d3ea82cc26de41b3a68bb62175db6&chksm=eb71a7ffdc062ee9a2f961e3187f58c3320da18dd363f414acbb80f722ed12993a0e5f54f6a6&scene=21#wechat_redirect
-    var params = url.searchParams;
+    let params = url.searchParams;
     var href = url.href;
     if (params.has('idx')) {
       var p = new URLSearchParams();
@@ -188,9 +189,11 @@ function ruleWeixin(tab, url, title) {
     }).then((result) => {
       var content = result[0];
       var items = [];
-      items.push(LinkItem(href, title + '| ' + content.site));
-      items.push(LinkItem(href, title + '| ' + content.user));
-      items.push(LinkItem(href, title + ' | weixin'));
+      items.push(LinkItem(href, content.text + ' | ' + content.site));
+      if (content.user) {
+        items.push(LinkItem(href, content.text + ' | ' + content.user));
+      }
+      items.push(LinkItem(href, content.text + ' | weixin'));
       items.push(LinkItem(href));
       resolv(items);
     });
@@ -221,6 +224,10 @@ function route(tab) {
     return ruleWiki(tab, url, title);
   }
 
+  if (url.hostname == 'bilibili.com') {
+    // https://www.bilibili.com/video/av9974371
+    return ruleReplace(tab, url, title, '_哔哩哔哩 (゜-゜)つロ 干杯~-bilibili', ' | bilibili');
+  }
   if (url.hostname == 'coolshell.cn') {
     // https://coolshell.cn/articles/9104.html
     return ruleReplace(tab, url, title, ' | | 酷 壳 - CoolShell', ' | CoolShell');
@@ -234,8 +241,8 @@ function route(tab) {
     return ruleReplace(tab, url, title, /^Kubernetes: /, '', true);
   }
   if (url.hostname == 'blog.scottlowe.org') {
-    // blog.scottlowe.org/2012/10/19/link-aggregation-and-lacp-with-open-vswitch/
-    return ruleReplace(tab, url, title, ' - The weblog of an IT pro specializing in cloud computing, virtualization, and networking, all with an open source view', '');
+    // https://blog.scottlowe.org/2012/10/19/link-aggregation-and-lacp-with-open-vswitch/
+    return ruleReplace(tab, url, title, ' - The weblog of an IT pro focusing on cloud computing, Kubernetes, Linux, containers, and networking', '');
   }
   return ruleDefault(tab, url, title);
 }
