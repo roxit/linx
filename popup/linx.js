@@ -139,11 +139,21 @@ function ruleWeibo(tab, url, title) {
   return new Promise((resolv, reject) => {
     if (url.pathname == '/ttarticle/p/show') {
       // https://weibo.com/ttarticle/p/show?id=2309404200442107174498
+      // https://weibo.com/ttarticle/p/show?id=2309404145831379921200
       var params = url.searchParams;
       var p = new URLSearchParams();
       p.append('id', params.get('id'));
       var href = url.protocol + '//' + url.hostname + url.pathname + '?' + p.toString();
-      resolv([LinkItem(href, title + ' | weibo'), LinkItem(href)]);
+      browser.tabs.executeScript({
+          file: "/content_scripts/weiboArticle.js"
+      }).then((result) => {
+          var content = result[0];
+          var items = [];
+          items.push(LinkItem(href, content.text + ' | @' + content.user));
+          items.push(LinkItem(href, title + ' | weibo'));
+          items.push(LinkItem(href));
+          resolv(items);
+      });
     }
     // simple: https://weibo.com/1852299857/G1gDN5btF?ref=collection&rid=5_0_0_3071696340287161361
     // repost: https://weibo.com/2020604851/G4K3JE5L5?from=page_1005052020604851_profile&wvr=6&mod=weibotime&type=comment
